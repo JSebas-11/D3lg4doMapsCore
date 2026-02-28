@@ -1,3 +1,5 @@
+using D3lg4doMaps.Core.Internal.Abstractions;
+using D3lg4doMaps.Core.Internal.Http.Builders;
 using D3lg4doMaps.Core.Internal.Http.Client;
 using D3lg4doMaps.Core.Internal.Utils;
 using D3lg4doMaps.Core.Public.Abstractions;
@@ -16,8 +18,10 @@ public static class DependencyInjection {
         // HTTP
         services.AddHttpClient<IMapsApiClient, MapsApiClient>();
 
-        // JSON
+        // UTILS
         services.AddSingleton<IMapsJsonSerializer, MapsJsonSerializer>();
+        services.AddTransient<IMapsUriBuilder, MapsUriBuilder>();
+        services.AddTransient<IRequestBuilder, RequestBuilder>();
         
         return services;
     }
