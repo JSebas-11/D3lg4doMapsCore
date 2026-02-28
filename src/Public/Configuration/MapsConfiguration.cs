@@ -1,6 +1,8 @@
 namespace D3lg4doMaps.Core.Public.Configuration;
 
 public sealed class MapsConfiguration {
+    internal string BaseUrl { get; set; } = default!;
+    
     public string ApiKey { get; set; } = default!;
     public string? Language { get; set; }
     public string? Region { get; set; }

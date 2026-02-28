@@ -1,6 +1,6 @@
-using System.Net.Http.Json;
-using System.Text.Json;
 using D3lg4doMaps.Core.Public.Abstractions;
+using D3lg4doMaps.Core.Public.Exceptions;
+using D3lg4doMaps.Core.Public.Models;
 
 namespace D3lg4doMaps.Core.Internal.Http.Client;
 
@@ -8,26 +8,23 @@ public class MapsApiClient : IMapsApiClient {
     // -------------------- INIT --------------------
     private readonly HttpClient _httpClient;
     private readonly IMapsJsonSerializer _serializer;
+    private readonly IRequestFactory _reqFactory;
 
-    public MapsApiClient(HttpClient httpClient, IMapsJsonSerializer serializer) {
+    public MapsApiClient(
+        HttpClient httpClient, IMapsJsonSerializer serializer, IRequestFactory requestFactory
+    ) {
         _httpClient = httpClient;
         _serializer = serializer;
+        _reqFactory = requestFactory;
     }
 
     // -------------------- METHS --------------------
-    public async Task<T> GetAsync<T>(string endpoint, object? query = null) {
-        var finalUrl = ""; //BuildUrl(url, query);
-        var response = await _httpClient.GetAsync(finalUrl).ConfigureAwait(false);
+    public async Task<T> SendAsync<T>(MapsApiRequest apiRequest) {
+        var request = _reqFactory.CreateRequest(apiRequest);
 
+        var response = await _httpClient.SendAsync(request).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
-        return await DeserializeOrExceptionAsync<T>(response).ConfigureAwait(false);
-    }
 
-    public async Task<T> PostAsync<T>(string endpoint, object body) {
-        var payload = JsonContent.Create(body);
-        var response = await _httpClient.PostAsync(endpoint, payload).ConfigureAwait(false);
-
-        response.EnsureSuccessStatusCode();
         return await DeserializeOrExceptionAsync<T>(response).ConfigureAwait(false);
     }
 
@@ -35,7 +32,7 @@ public class MapsApiClient : IMapsApiClient {
     private async Task<T> DeserializeOrExceptionAsync<T>(HttpResponseMessage response) {
         var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
         var result = _serializer.Deserialize<T>(json)
-            ?? throw new JsonException($"Response could not be deserialize to type {typeof(T).Name}");
+            ?? throw new MapsApiException($"Response could not be deserialize to type {typeof(T).Name}");
 
         return result;
     }
